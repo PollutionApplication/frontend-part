@@ -1,0 +1,5 @@
+# ninja log v5
+1	68	0	/opt/detox/frontend/DummyApp/android/app/.cxx/Debug/6w3r4s5v/arm64-v8a/CMakeFiles/cmake.verify_globs	74fa2b6cc018a259
+0	4405	1754888644037820950	CMakeFiles/appmodules.dir/opt/detox/frontend/DummyApp/android/app/build/generated/autolinking/src/main/jni/autolinking.cpp.o	787224f1e5fc0ed6
+0	4839	1754888644488436324	CMakeFiles/appmodules.dir/OnLoad.cpp.o	f28070ff8eaf88b3
+4839	5034	1754888644688297381	/opt/detox/frontend/DummyApp/android/app/build/intermediates/cxx/Debug/6w3r4s5v/obj/arm64-v8a/libappmodules.so	4ae7e200bd5efb3f

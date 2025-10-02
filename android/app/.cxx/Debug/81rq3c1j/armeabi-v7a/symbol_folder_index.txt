@@ -1,0 +1,1 @@
+/opt/DummyApp/frontend/android/app/build/intermediates/cxx/Debug/81rq3c1j/obj/armeabi-v7a

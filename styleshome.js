@@ -1,0 +1,151 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+
+export default StyleSheet.create({
+  // HomeScreen styles
+  background: {
+    flex: 1,
+    backgroundColor: 'rgba(218, 237, 220, 0.9)', 
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#2c3e50',
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 30,
+    color: '#34495e',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  icon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  scannerIcon: {
+    width: 50,
+    height: 50,
+    tintColor: '#3498db',
+  },
+  
+  // ScannerScreen styles
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  text: {
+    color: 'white',
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#3498db',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scanFrame: {
+    width: width * 0.7,
+    height: width * 0.7,
+    borderWidth: 2,
+    borderColor: 'white',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+  },
+  scanText: {
+    color: 'white',
+    fontSize: 16,
+    marginTop: 20,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 8,
+    padding: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  corner: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderColor: '#3498db',
+  },
+  cornerTopLeft: {
+    top: -1,
+    left: -1,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopLeftRadius: 12,
+  },
+  cornerTopRight: {
+    top: -1,
+    right: -1,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderTopRightRadius: 12,
+  },
+  cornerBottomLeft: {
+    bottom: -1,
+    left: -1,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomLeftRadius: 12,
+  },
+  cornerBottomRight: {
+    bottom: -1,
+    right: -1,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomRightRadius: 12,
+  },
+});
