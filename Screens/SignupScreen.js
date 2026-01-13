@@ -1,89 +1,64 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  Alert 
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator} from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import signupStyles from "../styles/SignupStyles";
 import { postSignup } from "../Controller/SignupApi";
+import { checkPasswordStrength, getStrengthColor } from "../Service/PasswordService"; 
 
 // TEMPORARY DEMO STORAGE
-// =========================
-// This is a simple in-memory storage for demonstration purposes.
-// In a production app, replace this with AsyncStorage, SQLite, or backend database.
 let demoUsers = [];
 
-// SIGNUP SCREEN COMPONENT
-// ==========================
-/**
- * Main Signup Screen Component
- * 
- * Features:
- * - User registration form with validation
- * - Password visibility toggle
- * - Duplicate account prevention
- * - Network error handling
- * - Real device compatibility
- * 
- * Backend Integration:
- * - Connects to Spring Boot backend at 192.168.1.4:1006
- * - Handles both success and error responses
- * - Fallback to demo storage when backend unavailable
- */
 export default function SignupScreen({ navigation }) {
   // STATE VARIABLES
-  
-  // Form field states
-  const [name, setName] = useState("");                    // User's full name
-  const [password, setPassword] = useState("");            // Password field
-  const [confirmpassword, setConfirmpassword] = useState(""); // Password confirmation
-  const [age, setAge] = useState("");                      // Selected age range
-  const [gender, setGender] = useState("");                // Selected gender
-  const [emailid, setEmailid] = useState("");              // Email address
-  const [mobilenumber, setMobilenumber] = useState("");    // Mobile number
-  const [otp, setOtp] = useState("");                      // OTP verification code
-  
-  // UI and validation states
-  const [errors, setErrors] = useState({});                // Stores validation error messages
-  const [isLoading, setIsLoading] = useState(false);       // Loading state during API calls
-  
-  // Password visibility states
-  const [showPassword, setShowPassword] = useState(false);           // Toggle password visibility
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Toggle confirm password visibility
-  
-  // CONSTANTS AND CONFIGURATION
-  
-  /**
-   * Age range options for the dropdown picker
-   * Format: "min-max" or "min+" for open-ended ranges
-   */
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmpassword, setConfirmpassword] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [emailid, setEmailid] = useState("");
+  const [mobilenumber, setMobilenumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ 
+    strength: 'EMPTY', 
+    message: 'Enter a password' 
+  });
+  const [checkingStrength, setCheckingStrength] = useState(false);
+
+  // ✅ Helper functions
+  const checkIfEmailExists = (email) => {
+    return demoUsers.some(user => user.emailid === email);
+  };
+
+  const checkIfMobileExists = (mobile) => {
+    return demoUsers.some(user => user.mobilenumber === mobile);
+  };
+
+  const checkDuplicates = (email, mobile) => {
+    const emailExists = checkIfEmailExists(email);
+    const mobileExists = checkIfMobileExists(mobile);
+    
+    return {
+      emailExists: emailExists,
+      mobileExists: mobileExists,
+      bothExist: emailExists && mobileExists
+    };
+  };
+
   const ageOptions = [
     "5-10", "11-20", "21-30", "31-40", 
     "41-50", "51-60", "61-70", "71+"
   ];
 
-  // HELPER FUNCTIONS
-  
-  /**
-   * Checks if a user with the given email or mobile number already exists
-   * @param {string} email - Email to check
-   * @param {string} mobile - Mobile number to check
-   * @returns {boolean} True if user exists, false otherwise
-   */
   const checkIfUserExists = (email, mobile) => {
     return demoUsers.some(user => 
       user.emailid === email || user.mobilenumber === mobile
     );
   };
 
-  /**
-   * Clears all form fields and error messages
-   * Called after successful signup
-   */
   const clearForm = () => {
     setName("");
     setPassword("");
@@ -94,70 +69,83 @@ export default function SignupScreen({ navigation }) {
     setMobilenumber("");
     setOtp("");
     setErrors({});
+    setPasswordStrength({ strength: 'EMPTY', message: 'Enter a password' });
+    setCheckingStrength(false);
   };
 
-  
   const toggleShowPassword = () => setShowPassword(!showPassword);
-  
-  
   const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
 
-  /**
-   * Handles email input changes and clears email-related errors
-   * @param {string} text - New email value
-   */
+  // ✅ Password strength check via backend
+  const handlePasswordChange = async (text) => {
+    setPassword(text);
+    setCheckingStrength(true);
+
+    try {
+      console.log("Checking password strength via backend for:", text);
+
+      // ✅ For Android Emulator, use 10.0.2.2 instead of your local IP
+      const response = await fetch("http://10.0.2.2:1006/api/signup/check-password-strength", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: text }),
+      });
+
+      console.log("Backend response status:", response.status);
+
+      if (!response.ok) {
+        throw new Error("Backend returned " + response.status);
+      }
+
+      const result = await response.json();
+      console.log("Password strength result:", result);
+
+    //  Alert.alert("Password Check", result.message);
+      setPasswordStrength(result);
+
+    } catch (error) {
+      console.error("Password strength check error:", error);
+    } finally {
+      setCheckingStrength(false);
+    }
+  };
+
   const handleEmailChange = (text) => {
     setEmailid(text);
     if (errors.emailid) setErrors({ ...errors, emailid: "" });
   };
 
-  /**
-   * Handles mobile number input changes and clears mobile-related errors
-   * @param {string} text - New mobile number value
-   */
   const handleMobileChange = (text) => {
     setMobilenumber(text);
     if (errors.mobilenumber) setErrors({ ...errors, mobilenumber: "" });
   };
 
-  /**
-   * Determines if the signup button should be disabled
-   * @returns {boolean} True if button should be disabled, false otherwise
-   */
   const isSignupDisabled = () => {
-    return isLoading ||                    // Disable during API calls
-           !name.trim() ||                 // Name is required
-           !password ||                    // Password is required
-           !confirmpassword ||             // Confirm password is required
-           !age ||                         // Age selection is required
-           !gender ||                      // Gender selection is required
-           !emailid.trim() ||              // Email is required
-           !mobilenumber.trim() ||         // Mobile number is required
-           !otp.trim() ||                  // OTP is required
-           password !== confirmpassword;   // Passwords must match
+    return (
+      isLoading ||
+      !name.trim() ||
+      !password ||
+      !confirmpassword ||
+      !age ||
+      !gender ||
+      !emailid.trim() ||
+      !mobilenumber.trim() ||
+      !otp.trim() ||
+      password !== confirmpassword
+    );
   };
 
-  // MAIN SIGNUP HANDLER
-  
-  /**
-   * Handles the signup process when the user submits the form
-   * Steps:
-   * 1. Form validation
-   * 2. Duplicate check in demo storage
-   * 3. API call to backend
-   * 4. Success/error handling
-   */
+  // ✅ Main signup handler
   const handleSignup = async () => {
-    // Prevent multiple simultaneous signup attempts
     if (isLoading) return;
 
-    // STEP 1: FORM VALIDATION
     let newErrors = {};
 
-    // Validate each required field
+    // Simple form validation
     if (!name.trim()) newErrors.name = "Please enter name";
     if (!password) newErrors.password = "Please enter password";
-    if (password && password !== confirmpassword) 
+    if (!confirmpassword) newErrors.confirmpassword = "Please enter confirm password";
+    if (password && password !== confirmpassword)
       newErrors.confirmpassword = "Passwords do not match";
     if (!age) newErrors.age = "Please select age";
     if (!gender) newErrors.gender = "Please select gender";
@@ -165,29 +153,27 @@ export default function SignupScreen({ navigation }) {
     if (!mobilenumber.trim()) newErrors.mobilenumber = "Please enter mobile number";
     if (!otp.trim()) newErrors.otp = "Please enter OTP";
 
-    // If validation errors exist, display them and stop processing
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    // STEP 2: DUPLICATE ACCOUNT CHECK (DEMO STORAGE)
-    if (checkIfUserExists(emailid, mobilenumber)) {
-      Alert.alert(
-        "Account Already Exists", 
-        "This email or mobile number is already registered!",
-        [{ text: "OK" }]
-      );
-      setErrors({ 
-        emailid: "Email already registered",
-        mobilenumber: "Mobile number already registered"
-      });
+    // Duplicate check
+    const duplicates = checkDuplicates(emailid, mobilenumber);
+    if (duplicates.bothExist) {
+      Alert.alert("Account Exists", "Both email and mobile already registered!");
+      return;
+    }
+    if (duplicates.emailExists) {
+      Alert.alert("Email Exists", "This email is already registered!");
+      return;
+    }
+    if (duplicates.mobileExists) {
+      Alert.alert("Mobile Exists", "This mobile number is already registered!");
       return;
     }
 
-    // STEP 3: API CALL TO BACKEND
-    setIsLoading(true); // Show loading state
+    setIsLoading(true);
 
     try {
-      // Send signup data to Spring Boot backend
       const result = await postSignup({
         name,
         password,
@@ -196,79 +182,40 @@ export default function SignupScreen({ navigation }) {
         gender,
         emailid,
         mobilenumber,
-        otp
+        otp,
       });
 
       console.log("Backend response:", result);
-      
-      // STEP 4: SUCCESS HANDLING
-      
-      // Save user to demo storage (fallback for demo purposes)
-      const newUser = {
+
+      // Save to demo data
+      demoUsers.push({
         name,
         emailid,
         mobilenumber,
         age,
         gender,
-        signupDate: new Date().toISOString()
-      };
-      demoUsers.push(newUser);
-      console.log("Saved to demo storage. Total users:", demoUsers.length);
-      
-      // Show success message and navigate to home screen
-      Alert.alert(
-        "Success", 
-        "Signup successful! User saved to database.",
-        [{ text: "OK", onPress: () => navigation.navigate("Home") }]
-      );
+        signupDate: new Date().toISOString(),
+      });
 
-      // Clear the form for next registration
+      Alert.alert("Success", "Signup successful!", [
+        { text: "OK", onPress: () => navigation.navigate("Home") },
+      ]);
+
       clearForm();
 
     } catch (error) {
-      // ERROR HANDLING
       console.error("Signup error:", error);
-      
-      // Handle duplicate entry error from backend
-      if (error.message === 'DUPLICATE_ENTRY') {
-        Alert.alert(
-          "Account Exists", 
-          "This email or mobile number is already registered in our system!",
-          [{ text: "OK" }]
-        );
-        setErrors({ 
-          emailid: "Already registered in system",
-          mobilenumber: "Already registered in system" 
-        });
-      } 
-      // Handle network connectivity issues
-      else if (error.message === 'NETWORK_ERROR') {
-        Alert.alert(
-          "Network Issue", 
-          `Cannot connect to server. Please check:
-1. Your MacBook is on same WiFi
-2. Spring Boot is running on port 1006
-3. Firewall is not blocking the connection`,
-          [{ text: "OK" }]
-        );
-      } 
-      // Handle all other errors
-      else {
-        Alert.alert("Error", "Signup failed. Please try again.");
-      }
+      Alert.alert("Error", "Signup failed. Please check your server.");
     } finally {
-      // Always reset loading state, regardless of success or failure
       setIsLoading(false);
     }
   };
 
-  // COMPONENT RENDER
+  // ✅ COMPONENT RENDER (keep inside the function)
   return (
     <ScrollView contentContainerStyle={signupStyles.container}>
-      {/* Page Title */}
       <Text style={signupStyles.title}>Sign Up</Text>
 
-      {/* NAME FIELD */}
       <TextInput
         style={signupStyles.input}
         placeholder="Name"
@@ -277,16 +224,16 @@ export default function SignupScreen({ navigation }) {
       />
       {errors.name && <Text style={signupStyles.errorText}>{errors.name}</Text>}
 
-      {/* PASSWORD FIELD WITH VISIBILITY TOGGLE */}
+      {/* Password field */}
       <View style={signupStyles.passwordContainer}>
         <TextInput
           style={signupStyles.passwordInput}
           placeholder="Password"
-          secureTextEntry={!showPassword} // Toggle between hidden/showing
+          secureTextEntry={!showPassword}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={handlePasswordChange}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={signupStyles.eyeButton}
           onPress={toggleShowPassword}
         >
@@ -295,9 +242,30 @@ export default function SignupScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <View style={signupStyles.strengthContainer}>
+        {checkingStrength ? (
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <ActivityIndicator size="small" color="#001f54" />
+            <Text style={[signupStyles.strengthText, { marginLeft: 8 }]}>
+              Checking strength...
+            </Text>
+          </View>
+        ) : (
+          <Text
+            style={[
+              signupStyles.strengthText,
+              { color: getStrengthColor(passwordStrength.strength) },
+            ]}
+          >
+            {passwordStrength.message}
+          </Text>
+        )}
+      </View>
+
       {errors.password && <Text style={signupStyles.errorText}>{errors.password}</Text>}
 
-      {/* CONFIRM PASSWORD FIELD WITH VISIBILITY TOGGLE */}
+      {/* Confirm Password */}
       <View style={signupStyles.passwordContainer}>
         <TextInput
           style={signupStyles.passwordInput}
@@ -306,7 +274,7 @@ export default function SignupScreen({ navigation }) {
           value={confirmpassword}
           onChangeText={setConfirmpassword}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={signupStyles.eyeButton}
           onPress={toggleShowConfirmPassword}
         >
@@ -315,15 +283,17 @@ export default function SignupScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </View>
-      {errors.confirmpassword && <Text style={signupStyles.errorText}>{errors.confirmpassword}</Text>}
+      {errors.confirmpassword && (
+        <Text style={signupStyles.errorText}>{errors.confirmpassword}</Text>
+      )}
 
-      {/* AGE SELECTION DROPDOWN */}
+      {/* AGE */}
       <View style={signupStyles.ageRow}>
         <Text style={signupStyles.ageLabel}>Age</Text>
         <Picker
           selectedValue={age}
           onValueChange={(itemValue) => setAge(itemValue)}
-          style={{ flex: 1, color: '#000', textAlign: 'center' }}
+          style={{ flex: 1, color: "#000" }}
           dropdownIconColor="#000"
         >
           <Picker.Item label="Select Age" value="" />
@@ -334,7 +304,7 @@ export default function SignupScreen({ navigation }) {
       </View>
       {errors.age && <Text style={signupStyles.errorText}>{errors.age}</Text>}
 
-      {/* GENDER SELECTION RADIO BUTTONS */}
+      {/* GENDER */}
       <View style={signupStyles.genderRow}>
         <Text style={signupStyles.genderLabel}>Gender</Text>
         <View style={signupStyles.genderOptionsWrapper}>
@@ -344,10 +314,12 @@ export default function SignupScreen({ navigation }) {
               style={signupStyles.radioOption}
               onPress={() => setGender(option)}
             >
-              <View style={[
-                signupStyles.radioCircle,
-                gender === option && signupStyles.selectedRadio
-              ]} />
+              <View
+                style={[
+                  signupStyles.radioCircle,
+                  gender === option && signupStyles.selectedRadio,
+                ]}
+              />
               <Text style={signupStyles.radioLabel}>{option}</Text>
             </TouchableOpacity>
           ))}
@@ -355,7 +327,7 @@ export default function SignupScreen({ navigation }) {
       </View>
       {errors.gender && <Text style={signupStyles.errorText}>{errors.gender}</Text>}
 
-      {/* EMAIL FIELD */}
+      {/* EMAIL */}
       <TextInput
         style={[signupStyles.input, errors.emailid && signupStyles.inputError]}
         placeholder="Email ID"
@@ -365,7 +337,7 @@ export default function SignupScreen({ navigation }) {
       />
       {errors.emailid && <Text style={signupStyles.errorText}>{errors.emailid}</Text>}
 
-      {/* MOBILE NUMBER FIELD */}
+      {/* MOBILE */}
       <TextInput
         style={[signupStyles.input, errors.mobilenumber && signupStyles.inputError]}
         placeholder="Mobile Number"
@@ -373,9 +345,11 @@ export default function SignupScreen({ navigation }) {
         value={mobilenumber}
         onChangeText={handleMobileChange}
       />
-      {errors.mobilenumber && <Text style={signupStyles.errorText}>{errors.mobilenumber}</Text>}
+      {errors.mobilenumber && (
+        <Text style={signupStyles.errorText}>{errors.mobilenumber}</Text>
+      )}
 
-      {/* OTP FIELD */}
+      {/* OTP */}
       <TextInput
         style={signupStyles.input}
         placeholder="OTP"
@@ -386,23 +360,19 @@ export default function SignupScreen({ navigation }) {
       {errors.otp && <Text style={signupStyles.errorText}>{errors.otp}</Text>}
 
       {/* SIGNUP BUTTON */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
-          signupStyles.button, 
-          isSignupDisabled() && signupStyles.buttonDisabled
-        ]} 
+          signupStyles.button,
+          isSignupDisabled() && signupStyles.buttonDisabled,
+        ]}
         onPress={handleSignup}
-        disabled={isSignupDisabled()}
       >
         <Text style={signupStyles.buttonText}>
           {isLoading ? "Creating Account..." : "Sign Up"}
         </Text>
       </TouchableOpacity>
 
-      {/* SERVER INFORMATION (FOR DEBUGGING) */}
-      <Text style={signupStyles.demoInfo}>
-        Server: 192.168.1.4:1006 (Your MacBook)
-      </Text>
+      <Text style={signupStyles.demoInfo}>Server: 10.0.2.2:1006 (Emulator)</Text>
     </ScrollView>
   );
 }

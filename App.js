@@ -5,6 +5,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import styles from './styleshome';
 import ScannerScreen from './ScannerScreen';
 import SignupScreen from './Screens/SignupScreen';
+import SigninScreen from './Screens/SigninScreen';  // Now this will work
+
 
 function HomeScreen({ navigation }) {
   return (
@@ -30,14 +32,14 @@ function HomeScreen({ navigation }) {
 }
 
 const Stack = createNativeStackNavigator();
-
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Signup"  // Signup screen will be first
+        initialRouteName="Signin"  // Start with Signin screen
         screenOptions={{ headerShown: false }}
       >
+        <Stack.Screen name="Signin" component={SigninScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Scanner" component={ScannerScreen} />

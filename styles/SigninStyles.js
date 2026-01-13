@@ -42,76 +42,10 @@ export default StyleSheet.create({
     fontWeight: '600',
   },
 
-  ageRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 15,
-  width: '100%',
-  backgroundColor: '#C0C0C0', // Same as other fields
-  borderRadius: 5,
-  paddingHorizontal: 10,
-  height: 50,
-},
-ageLabel: {
-  fontSize: 16,
-  color: '#000',
-},
-agePickerWrapper: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-agePickerText: {
-  fontSize: 16,
-  color: '#000',
-  textAlign: 'center',
-},
 hiddenPicker: {
   height: 0,
   width: 0,
   opacity: 0,
-},
-
-
-genderRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 20,
-  width: '100%',
-  backgroundColor: '#C0C0C0', // same as input fields
-  borderRadius: 5,
-  paddingHorizontal: 10,
-  height: 50,
-},
-
-genderLabel: {
-  fontSize: 16,
-  color: '#000',
-},
-
-genderOptionsWrapper: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-around',
-  flex: 1,
-},
-
-radioOption: {
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-
-radioCircle: {
-  height: 20,
-  width: 20,
-  borderRadius: 10,
-  borderWidth: 2,
-  borderColor: '#000',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginRight: 5,
 },
 
 selectedRadio: {
@@ -146,30 +80,10 @@ errorText: {
     fontSize: 16,
     paddingVertical: 10,
   },
-  eyeButton: {
-    padding: 5,
-  },
-  eyeText: {
-    color: '#001f54', // navy blue
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
 
   inputError: {
     borderBottomColor:  '#888', 
     backgroundColor: '#C0C0C0'
   },
-
-  // PASSWORD STRENGTH STYLES
- // Add these to your SignupStyles
-strengthContainer: {
-  marginTop: 5,
-  marginBottom: 10,
-  paddingHorizontal: 10,
-},
-strengthText: {
-  fontSize: 14,
-  fontWeight: 'bold',
-},
 
 });
