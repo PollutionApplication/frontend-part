@@ -1,10 +1,12 @@
-const API_BASE_URL = 'http://10.0.2.2:1006/api';
+import Config from '../config';  // Import the config
+
+const API_BASE_URL = Config.API_BASE_URL;  // Use from config
 
 // POST: create user
 export const postSignup = async (userData) => {
   try {
+console.log('Using API URL from config:', API_BASE_URL);
     console.log('Starting API call to:', `${API_BASE_URL}/signup/post`);
-
     const requestData = {
       username: userData.name,
       password: userData.password,

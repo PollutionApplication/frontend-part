@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
   Alert,
-  ActivityIndicator 
+  ActivityIndicator
 } from "react-native";
 import signinStyles from "../styles/SigninStyles";
 import { handleSignin } from "../Controller/SigninController";
@@ -59,7 +59,7 @@ export default function SigninScreen({ navigation }) {
     if (!emailid.trim()) {
       newErrors.emailid = "Please enter email ID";
     }
-    
+
     if (!password) {
       newErrors.password = "Please enter password";
     }
@@ -80,29 +80,31 @@ export default function SigninScreen({ navigation }) {
       });
 
       console.log("Signin successful:", result);
-      
+
       // Success handling
       Alert.alert(
-        "Success", 
+        "Success",
         "Login successful!",
-        [{ text: "OK", onPress: () => {
-          clearForm();
-          navigation.navigate("Home");
-        }}]
+        [{
+          text: "OK", onPress: () => {
+            clearForm();
+            navigation.navigate("Home");
+          }
+        }]
       );
 
     } catch (error) {
       console.error("Signin error:", error);
-      
+
       // Handle different error types
       let errorMessage = "Login failed. Please try again.";
-      
+
       switch (error.message) {
         case 'INVALID_CREDENTIALS':
           errorMessage = "Invalid email or password.";
-          setErrors({ 
+          setErrors({
             emailid: "Invalid credentials",
-            password: "Invalid credentials" 
+            password: "Invalid credentials"
           });
           break;
         case 'USER_NOT_FOUND':
@@ -122,7 +124,7 @@ export default function SigninScreen({ navigation }) {
         default:
           errorMessage = error.message || "Login failed. Please try again.";
       }
-      
+
       Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
@@ -156,7 +158,7 @@ export default function SigninScreen({ navigation }) {
           onChangeText={handlePasswordChange}
           placeholderTextColor="#666"
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={signinStyles.eyeButton}
           onPress={toggleShowPassword}
         >
@@ -166,13 +168,13 @@ export default function SigninScreen({ navigation }) {
         </TouchableOpacity>
       </View>
       {errors.password && <Text style={signinStyles.errorText}>{errors.password}</Text>}
-    
+
       {/* SIGNIN BUTTON */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
-          signinStyles.button, 
+          signinStyles.button,
           isSigninDisabled() && signinStyles.buttonDisabled
-        ]} 
+        ]}
         onPress={handleSigninPress}
         disabled={isSigninDisabled()}
       >
@@ -184,7 +186,7 @@ export default function SigninScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* SIGNUP LINK */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={signinStyles.linkButton}
         onPress={() => navigation.navigate('Signup')}
       >
@@ -195,7 +197,7 @@ export default function SigninScreen({ navigation }) {
 
       {/* SERVER INFORMATION */}
       <Text style={signinStyles.demoInfo}>
-        Server: 10.0.2.2:1006
+        Server: 192.168.1.5:1006
       </Text>
     </ScrollView>
   );

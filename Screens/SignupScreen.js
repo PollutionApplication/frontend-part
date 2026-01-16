@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import signupStyles from "../styles/SignupStyles";
 import { postSignup } from "../Controller/SignupApi";
-import { checkPasswordStrength, getStrengthColor } from "../Service/PasswordService"; 
+import { checkPasswordStrength, getStrengthColor } from "../Service/PasswordService";
+import Config from '../config';
+
 
 // TEMPORARY DEMO STORAGE
 let demoUsers = [];
@@ -22,11 +24,15 @@ export default function SignupScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState({ 
-    strength: 'EMPTY', 
-    message: 'Enter a password' 
+  const [passwordStrength, setPasswordStrength] = useState({
+    strength: 'EMPTY',
+    message: 'Enter a password'
   });
   const [checkingStrength, setCheckingStrength] = useState(false);
+
+  // NEW STATE FOR OTP FLOW
+  const [otpSent, setOtpSent] = useState(false); // To track if OTP was sent
+  const [sendingOtp, setSendingOtp] = useState(false); // To show loading for OTP button
 
   // ✅ Helper functions
   const checkIfEmailExists = (email) => {
@@ -40,7 +46,7 @@ export default function SignupScreen({ navigation }) {
   const checkDuplicates = (email, mobile) => {
     const emailExists = checkIfEmailExists(email);
     const mobileExists = checkIfMobileExists(mobile);
-    
+
     return {
       emailExists: emailExists,
       mobileExists: mobileExists,
@@ -49,12 +55,12 @@ export default function SignupScreen({ navigation }) {
   };
 
   const ageOptions = [
-    "5-10", "11-20", "21-30", "31-40", 
+    "5-10", "11-20", "21-30", "31-40",
     "41-50", "51-60", "61-70", "71+"
   ];
 
   const checkIfUserExists = (email, mobile) => {
-    return demoUsers.some(user => 
+    return demoUsers.some(user =>
       user.emailid === email || user.mobilenumber === mobile
     );
   };
@@ -71,11 +77,47 @@ export default function SignupScreen({ navigation }) {
     setErrors({});
     setPasswordStrength({ strength: 'EMPTY', message: 'Enter a password' });
     setCheckingStrength(false);
+    // Reset OTP state
+    setOtpSent(false);
+    setSendingOtp(false);
   };
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
   const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
 
+  // ✅ NEW FUNCTION: Handle Send OTP button click
+  const handleSendOtp = async () => {
+    // First, check if mobile number is entered
+    if (!mobilenumber.trim()) {
+      Alert.alert("Error", "Please enter mobile number first");
+      return;
+    }
+    // Check mobile number format (basic check - 10 digits)
+    const mobileRegex = /^[0-9]{10}$/;
+    if (!mobileRegex.test(mobilenumber)) {
+      Alert.alert("Error", "Please enter a valid 10-digit mobile number");
+      return;
+    }
+    // Show loading
+    setSendingOtp(true);
+    // Simulate API call delay (2 seconds)
+    setTimeout(() => {
+      // In real app, you would call your OTP sending API here
+      // For demo, we'll just show success
+      Alert.alert(
+        "OTP Sent",
+        "OTP has been sent to your mobile number. Please check and enter it below.",
+        [{ text: "OK" }]
+      );
+
+      // Mark OTP as sent and show OTP field
+      setOtpSent(true);
+      setSendingOtp(false);
+
+      // For demo, auto-fill a dummy OTP (remove in production)
+      setOtp("123456");
+    }, 2000);
+  };
   // ✅ Password strength check via backend
   const handlePasswordChange = async (text) => {
     setPassword(text);
@@ -85,7 +127,8 @@ export default function SignupScreen({ navigation }) {
       console.log("Checking password strength via backend for:", text);
 
       // ✅ For Android Emulator, use 10.0.2.2 instead of your local IP
-      const response = await fetch("http://10.0.2.2:1006/api/signup/check-password-strength", {
+      const response = await fetch(`${Config.API_BASE_URL}/signup/check-password-strength`, {
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: text }),
@@ -100,7 +143,7 @@ export default function SignupScreen({ navigation }) {
       const result = await response.json();
       console.log("Password strength result:", result);
 
-    //  Alert.alert("Password Check", result.message);
+      //  Alert.alert("Password Check", result.message);
       setPasswordStrength(result);
 
     } catch (error) {
@@ -118,6 +161,11 @@ export default function SignupScreen({ navigation }) {
   const handleMobileChange = (text) => {
     setMobilenumber(text);
     if (errors.mobilenumber) setErrors({ ...errors, mobilenumber: "" });
+    // Reset OTP sent state if mobile number changes
+    if (otpSent) {
+      setOtpSent(false);
+      setOtp("");
+    }
   };
 
   const isSignupDisabled = () => {
@@ -130,7 +178,8 @@ export default function SignupScreen({ navigation }) {
       !gender ||
       !emailid.trim() ||
       !mobilenumber.trim() ||
-      !otp.trim() ||
+      // Check OTP only if it was sent
+      (otpSent && !otp.trim()) ||
       password !== confirmpassword
     );
   };
@@ -151,7 +200,9 @@ export default function SignupScreen({ navigation }) {
     if (!gender) newErrors.gender = "Please select gender";
     if (!emailid.trim()) newErrors.emailid = "Please enter email ID";
     if (!mobilenumber.trim()) newErrors.mobilenumber = "Please enter mobile number";
-    if (!otp.trim()) newErrors.otp = "Please enter OTP";
+    // OTP validation - only check if OTP was sent
+    if (otpSent && !otp.trim()) newErrors.otp = "Please enter OTP";
+    if (!otpSent) newErrors.otp = "Please send OTP first";
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -348,17 +399,43 @@ export default function SignupScreen({ navigation }) {
       {errors.mobilenumber && (
         <Text style={signupStyles.errorText}>{errors.mobilenumber}</Text>
       )}
+      {/* NEW: SEND OTP BUTTON */}
+      <TouchableOpacity
+        style={[
+          signupStyles.button,
+          { backgroundColor: "#4CAF50", marginBottom: 10 }
+        ]}
+        onPress={handleSendOtp}
+        disabled={sendingOtp}
+      >
+        <Text style={signupStyles.buttonText}>
+          {sendingOtp ? "Sending OTP..." : "Send OTP"}
+        </Text>
+      </TouchableOpacity>
+      {/* OTP FIELD - Only show if OTP was sent */}
+      {otpSent && (
+        <View>
+          <TextInput
+            style={signupStyles.input}
+            placeholder="Enter OTP"
+            keyboardType="numeric"
+            value={otp}
+            onChangeText={setOtp}
+          />
+          {errors.otp && <Text style={signupStyles.errorText}>{errors.otp}</Text>}
 
-      {/* OTP */}
-      <TextInput
-        style={signupStyles.input}
-        placeholder="OTP"
-        keyboardType="numeric"
-        value={otp}
-        onChangeText={setOtp}
-      />
-      {errors.otp && <Text style={signupStyles.errorText}>{errors.otp}</Text>}
-
+          {/* Optional: Add a resend OTP button */}
+          <TouchableOpacity
+            onPress={() => {
+              setOtp("");
+              handleSendOtp();
+            }}
+            style={{ alignSelf: 'flex-end', padding: 5 }}
+          >
+            <Text style={{ color: "#2196F3", fontSize: 14 }}>Resend OTP</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       {/* SIGNUP BUTTON */}
       <TouchableOpacity
         style={[
@@ -373,6 +450,7 @@ export default function SignupScreen({ navigation }) {
       </TouchableOpacity>
 
       <Text style={signupStyles.demoInfo}>Server: 10.0.2.2:1006 (Emulator)</Text>
+
     </ScrollView>
   );
 }
