@@ -2,11 +2,18 @@ import Config from "../config";
 
 export const verifyEmailExistence = async (email) => {
   try {
-   
+    console.log('=== EMAIL VERIFICATION ===');
+    console.log('Email to verify:', email);
     
     // Validate email
     if (!email || email.trim() === '') {
-      throw new Error('Email is required');
+      return {
+        success: false,
+        verified: false,
+        message: 'Email is required',
+        email: email,
+        status: 'EMPTY'
+      };
     }
     
     const emailLower = email.toLowerCase().trim();
@@ -34,43 +41,20 @@ export const verifyEmailExistence = async (email) => {
       body: JSON.stringify(requestBody),
     });
     
-    
-    if (response.status === 403) {
-      console.error('403 Forbidden - Check CORS or nginx configuration');
-      return {
-        success: false,
-        verified: false,
-        message: 'Server access forbidden. Please check server configuration.',
-        email: email,
-        status: 'FORBIDDEN',
-        statusCode: 403
-      };
-    }
-    
-    if (response.status === 404) {
-      console.error('404 Not Found - Endpoint does not exist');
-      return {
-        success: false,
-        verified: false,
-        message: 'Email verification endpoint not found. Check backend URL.',
-        email: email,
-        status: 'ENDPOINT_NOT_FOUND',
-        statusCode: 404
-      };
-    }
+    console.log('Response Status:', response.status);
     
     if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
       const errorText = await response.text();
-      console.error('Error response text:', errorText);
+      console.error('Error response:', errorText);
       
-      // Try to parse as JSON
-      try {
-        const errorJson = JSON.parse(errorText);
-        throw new Error(errorJson.message || `Server returned ${response.status}`);
-      } catch {
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
-      }
+      return {
+        success: false,
+        verified: false,
+        message: `Server error: ${response.status}`,
+        email: email,
+        status: 'HTTP_ERROR',
+        statusCode: response.status
+      };
     }
     
     const result = await response.json();
@@ -80,33 +64,13 @@ export const verifyEmailExistence = async (email) => {
     
   } catch (error) {
     console.error('Email verification error:', error);
-    console.error('Error stack:', error.stack);
     
     return {
       success: false,
       verified: false,
-      message: error.message || 'Unable to verify email. Please try again.',
+      message: error.message || 'Unable to verify email',
       email: email,
-      status: 'ERROR',
-      error: error.message
+      status: 'ERROR'
     };
-  }
-};
-
-// Optional: Add a simple connectivity test
-export const testBackendConnectivity = async () => {
-  try {
-    const response = await fetch(`${Config.API_BASE_URL}/health` || `${Config.API_BASE_URL}/`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    
-    console.log('Connectivity test response:', response.status);
-    return response.status === 200 || response.status === 404;
-  } catch (error) {
-    console.log('Connectivity test failed:', error.message);
-    return false;
   }
 };
