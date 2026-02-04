@@ -8,3 +8,17 @@ ios/build/
 .DS_Store
 .env
 
+# Android native build files
+android/app/.cxx/
+android/build/
+
+# Native build & logs
+*.log
+*.ninja*
+*.bin
+*.json
+dump.rdb
+
+# Certificates / keys
+*.pem
+

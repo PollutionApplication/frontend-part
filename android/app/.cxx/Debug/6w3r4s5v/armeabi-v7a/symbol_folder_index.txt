@@ -1,1 +1,0 @@
-/opt/detox/frontend/DummyApp/android/app/build/intermediates/cxx/Debug/6w3r4s5v/obj/armeabi-v7a

@@ -20,7 +20,7 @@
  * - Temporary in-memory storage is used ONLY for demo/testing
  * - otp         : Final verified OTP
  * - tempOtp     : Array to store each OTP digit (UI input)
- *
+ * - Email verifcation : logic to verify the email 
  * ============================================================
  */
 
@@ -41,6 +41,8 @@ import { postSignup } from "../Controller/SignupApi";
 import { checkPasswordStrength, getStrengthColor } from "../Service/PasswordService";
 import { sendOTP, verifyOTP } from "../Service/OtpService";
 import Config from '../config';
+import { verifyEmailExistence } from "../Service/EmailVerificationService";
+
 
 // TEMPORARY DEMO STORAGE
 let demoUsers = [];
@@ -64,6 +66,10 @@ export default function SignupScreen({ navigation }) {
     message: 'Enter a password'
   });
   const [checkingStrength, setCheckingStrength] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [emailMessage, setEmailMessage] = useState("");
+
 
   // NEW STATE FOR OTP FLOW
   const [otpSent, setOtpSent] = useState(false);
@@ -221,11 +227,6 @@ export default function SignupScreen({ navigation }) {
   const handleVerifyOtp = async () => {
     const otpString = tempOtp.join('');
 
-    console.log('=== OTP VERIFICATION DEBUG ===');
-    console.log('OTP entered:', otpString);
-    console.log('Mobile from state:', mobilenumber);
-    console.log('Config API URL:', Config.API_BASE_URL);
-
     if (otpString.length !== 6) {
       Alert.alert("Error", "Please enter 6-digit OTP");
       return;
@@ -291,7 +292,6 @@ export default function SignupScreen({ navigation }) {
     setCheckingStrength(true);
 
     try {
-      console.log("Checking password strength via backend for:", text);
 
       const response = await fetch(`${Config.API_BASE_URL}/signup/check-password-strength`, {
         method: "POST",
@@ -299,18 +299,15 @@ export default function SignupScreen({ navigation }) {
         body: JSON.stringify({ password: text }),
       });
 
-      console.log("Backend response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Backend returned " + response.status);
       }
 
       const result = await response.json();
-      console.log("Password strength result:", result);
       setPasswordStrength(result);
 
     } catch (error) {
-      console.error("Password strength check error:", error);
     } finally {
       setCheckingStrength(false);
     }
@@ -339,6 +336,41 @@ export default function SignupScreen({ navigation }) {
     }
   };
 
+
+  // Logic for email verification
+  const handleVerifyEmail = async () => {
+    if (!emailid.trim()) {
+      Alert.alert("Error", "Please enter email");
+      return;
+    }
+    if (!emailid.endsWith("@gmail.com")) {
+      Alert.alert("Error", "Only Gmail allowed");
+      return;
+    }
+    setVerifyingEmail(true);
+    try {
+      const result = await verifyEmailExistence(emailid);
+      if (result.verified) {
+        setEmailVerified(true);
+        setEmailMessage(result.message || "Email verified successfully");
+        Alert.alert("Success", result.message);
+      } else {
+        setEmailVerified(false);
+        setEmailMessage(result.message);
+        Alert.alert("Error", result.message);
+      }
+    }
+    catch (error) {
+      setEmailVerified(false);
+      Alert.alert("Error", error.message);
+
+    } finally {
+      setVerifyingEmail(false);
+    }
+  };
+
+  // Logic for email verification
+
   const isSignupDisabled = () => {
     return (
       isLoading ||
@@ -350,6 +382,8 @@ export default function SignupScreen({ navigation }) {
       !emailid.trim() ||
       !mobilenumber.trim() ||
       !otpVerified ||
+      !emailVerified ||
+
       password !== confirmpassword
     );
   };
@@ -359,7 +393,10 @@ export default function SignupScreen({ navigation }) {
     if (isLoading) return;
 
     let newErrors = {};
-
+    if (!emailVerified) {
+      Alert.alert("Error", "Please verify email first");
+      return;
+    }
     // Simple form validation
     if (!name.trim()) newErrors.name = "Please enter name";
     if (!password) newErrors.password = "Please enter password";
@@ -431,7 +468,6 @@ export default function SignupScreen({ navigation }) {
       ]);
 
     } catch (error) {
-      console.error("Signup error:", error);
 
       if (error.message === "Invalid OTP! Please enter correct OTP." ||
         error.message.includes("Invalid OTP")) {
@@ -680,13 +716,52 @@ export default function SignupScreen({ navigation }) {
       {errors.gender && <Text style={signupStyles.errorText}>{errors.gender}</Text>}
 
       {/* EMAIL */}
+      {/* EMAIL INPUT */}
       <TextInput
-        style={[signupStyles.input, errors.emailid && signupStyles.inputError]}
+        style={[
+          signupStyles.input,
+          errors.emailid && signupStyles.inputError
+        ]}
         placeholder="Email ID"
         keyboardType="email-address"
         value={emailid}
-        onChangeText={handleEmailChange}
+        onChangeText={(text) => {
+          setEmailid(text);
+          setEmailVerified(false); // reset if email changes
+        }}
       />
+
+      {/* VERIFY EMAIL BUTTON */}
+      <TouchableOpacity
+        style={[
+          signupStyles.button,
+          emailVerified && { backgroundColor: "#4CAF50" }
+        ]}
+        onPress={handleVerifyEmail}
+        disabled={verifyingEmail}
+      >
+        <Text style={signupStyles.buttonText}>
+          {verifyingEmail
+            ? "Verifying Email..."
+            : emailVerified
+              ? "✓ Email Verified"
+              : "Verify Email"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* EMAIL STATUS MESSAGE */}
+      {emailMessage !== "" && (
+        <Text
+          style={{
+            color: emailVerified ? "green" : "red",
+            marginBottom: 10,
+            textAlign: "center"
+          }}
+        >
+          {emailMessage}
+        </Text>
+      )}
+
       {errors.emailid && <Text style={signupStyles.errorText}>{errors.emailid}</Text>}
 
       {/* MOBILE */}

@@ -1,3 +1,0 @@
-/opt/detox/frontend/DummyApp/android/app/.cxx/Debug/6w3r4s5v/x86/CMakeFiles/appmodules.dir
-/opt/detox/frontend/DummyApp/android/app/.cxx/Debug/6w3r4s5v/x86/CMakeFiles/edit_cache.dir
-/opt/detox/frontend/DummyApp/android/app/.cxx/Debug/6w3r4s5v/x86/CMakeFiles/rebuild_cache.dir

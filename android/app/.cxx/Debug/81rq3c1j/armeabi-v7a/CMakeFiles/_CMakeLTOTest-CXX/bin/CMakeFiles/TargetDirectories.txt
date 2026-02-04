@@ -1,4 +1,0 @@
-/opt/DummyApp/frontend/android/app/.cxx/Debug/81rq3c1j/armeabi-v7a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
-/opt/DummyApp/frontend/android/app/.cxx/Debug/81rq3c1j/armeabi-v7a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
-/opt/DummyApp/frontend/android/app/.cxx/Debug/81rq3c1j/armeabi-v7a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
-/opt/DummyApp/frontend/android/app/.cxx/Debug/81rq3c1j/armeabi-v7a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir
