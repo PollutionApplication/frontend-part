@@ -32,7 +32,7 @@ export const verifyEmailExistence = async (email) => {
     // Prepare request
     const requestBody = { email: emailLower };
     
-    const response = await fetch(`${Config.API_BASE_URL}/signup/emailexistence`, {
+    const response = await fetch(`${Config.API_BASE_URL}/signup/verify-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
